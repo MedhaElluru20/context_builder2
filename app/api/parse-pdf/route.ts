@@ -1,4 +1,7 @@
-import pdf from "pdf-parse";
+import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+
+// Disable worker in serverless environment
+GlobalWorkerOptions.workerSrc = "";
 
 export async function POST(req: Request) {
   const formData = await req.formData();
@@ -10,11 +13,28 @@ export async function POST(req: Request) {
 
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const data = await pdf(buffer);
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    const pdf = await getDocument({
+      data: uint8Array,
+      useSystemFonts: true,
+      disableFontFace: true,
+    }).promise;
+
+    const textParts: string[] = [];
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items
+        .map((item) => ("str" in item ? item.str : ""))
+        .join(" ");
+      textParts.push(pageText);
+    }
 
     // Clean and join text
-    const cleanedText = data.text
+    const cleanedText = textParts
+      .join("\n\n")
       .split(/\n+/)
       .map((line: string) => line.trim())
       .filter((line: string) => line.length > 0)
