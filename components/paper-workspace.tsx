@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, FileText, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Upload, FileText, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface Paper {
@@ -25,7 +25,6 @@ export default function PaperWorkspace({
 }: PaperWorkspaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showRawText, setShowRawText] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,9 +53,9 @@ export default function PaperWorkspace({
 
       const data = await response.json();
       onPaperUpdate({
-        text: data.text,
+        text: "", // Text extraction handled by Gemini directly
         summary: data.summary,
-        filename: file.name,
+        filename: data.filename || file.name,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -155,27 +154,11 @@ export default function PaperWorkspace({
             </div>
           )}
 
-          {/* Raw Text Preview */}
+          {/* Status indicator */}
           {paper && (
-            <div className="mt-4">
-              <button
-                onClick={() => setShowRawText(!showRawText)}
-                className="flex items-center gap-2 text-sm font-medium text-[var(--foreground)] hover:text-[var(--primary)]"
-              >
-                {showRawText ? (
-                  <ChevronUp className="w-4 h-4" />
-                ) : (
-                  <ChevronDown className="w-4 h-4" />
-                )}
-                {showRawText ? "Hide" : "Show"} extracted text
-              </button>
-              {showRawText && (
-                <textarea
-                  readOnly
-                  value={paper.text}
-                  className="mt-2 w-full h-48 p-3 text-xs font-mono bg-white border border-[var(--border)] rounded-lg resize-none"
-                />
-              )}
+            <div className="mt-4 flex items-center gap-2 text-sm text-emerald-600">
+              <FileText className="w-4 h-4" />
+              <span>PDF processed successfully</span>
             </div>
           )}
         </div>

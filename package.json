@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "context-builder",
   "private": true,
   "scripts": {
     "dev": "next dev",

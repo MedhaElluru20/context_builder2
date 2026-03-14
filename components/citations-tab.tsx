@@ -32,10 +32,10 @@ export default function CitationsTab() {
     setHasSearched(true);
 
     try {
-      const response = await fetch("/api/find-citations", {
+      const response = await fetch("/api/citations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea, limit: maxResults }),
+        body: JSON.stringify({ query: idea }),
       });
 
       if (!response.ok) {
@@ -44,7 +44,15 @@ export default function CitationsTab() {
       }
 
       const data = await response.json();
-      setCitations(data.citations);
+      setCitations(data.papers.slice(0, maxResults).map((p: any) => ({
+        title: p.title,
+        authors: p.authors?.map((name: string) => ({ name })) || [],
+        year: p.year,
+        venue: p.venue,
+        doi: null,
+        url: p.url,
+        isOpenAccess: !!p.pdfUrl
+      })));
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
